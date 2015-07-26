@@ -1,0 +1,24 @@
+{
+  "name": "agf",
+  "version": "1.0.0",
+  "description": "async flow with generators",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --harmony",
+    "test-cont": "mocha --harmony -w"
+  },
+  "keywords": [
+    "async",
+    "flow",
+    "generators"
+  ],
+  "devDependencies":{
+    "mocha":"*",
+    "should":"*"
+  },
+  "engines":{
+    "node":">=0.12.x"
+  },
+  "author": "deebeel",
+  "license": "ISC"
+}

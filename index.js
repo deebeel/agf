@@ -1,28 +1,25 @@
 "use strict";
-function argumentsToResult(args, isRaw){
-  const sliceStartIndex = isRaw ? 0 : 1;
-  const res = [].slice.call(args, sliceStartIndex);
-  return res.length > 1 ? res : res[0];
-}
+const slice = [].slice;
 
-function prepareFunctionToCall(callback, generator){
-  return callback ? callback : generator.throw.bind(generator);
-}
-
-function run(generatorTemplate, isRaw, callback) {
-  if (typeof isRaw === "function") {
-    callback = isRaw;
-    isRaw = false;
+function run(generatorTemplate, done) {
+  const generator = generatorTemplate(resultHandler, finalizer);
+  function finalizer(){
+    return done || function(){
+      throw new Error("Finalizer can't be called without done callback");
+    };
   }
-  let generator = null;
-  const toCall = prepareFunctionToCall(generator, callback);
-  function resultHandler(err) {
-    if (err) {
-      return setImmediate(()=>toCall(err));
-    }
-    setImmediate(()=>generator.next(argumentsToResult(arguments, isRaw)));
+  function resultHandler(isRaw) {
+    const bound = isRaw ? 0 : 1;
+    return (err) => {
+      if (err && !isRaw) {
+        const toCall = (done && done.bind(null, err)) || generator.throw.bind(generator, err);
+        return setImmediate(toCall);
+      }
+      const operationResult = slice.call(arguments, bound);
+      const toReturn = operationResult.length > 1 ? operationResult : operationResult[0];
+      setImmediate(generator.next.bind(generator, toReturn));
+    };
   }
-  generator = generatorTemplate(resultHandler);
   generator.next();
 }
 module.exports = run;
