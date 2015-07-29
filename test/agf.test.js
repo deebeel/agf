@@ -36,8 +36,8 @@ describe("#agf", ()=>{
   it("should return an error", (done)=>{
     agf(function* (resultHandler){
       const e = yield asyncFunction(new Error("error"), true)(resultHandler(true));
-      e.should.be.an.Error();
-      e.message.should.be.eql("error");
+      e[0].should.be.an.Error();
+      e[0].message.should.be.eql("error");
       done();
     });
   });
@@ -85,5 +85,5 @@ describe("#agf", ()=>{
       res.should.be.eql(10);
       done();
     });
-  })
+  });
 });
