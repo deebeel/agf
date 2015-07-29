@@ -12,7 +12,12 @@ function run(generatorTemplate, done) {
         return setImmediate(toCall);
       }
       const operationResult = slice.call(arguments, bound);
-      const toYield = operationResult.length > 1 ? operationResult : operationResult[0];
+      let toYield = null;
+      if(err && isRaw){
+        toYield = operationResult;
+      } else {
+        toYield = operationResult.length > 1 ? operationResult : operationResult[0];
+      }
       setImmediate(() => {
         if (isDone) {
           operationResult.unshift(null);
