@@ -2,3 +2,8 @@ sudo: false
 language: node_js
 node_js:
   - "0.12"
+
+deploy:
+  provider: npm
+  email: "deedeeua@gmail.com"
+  api_key: "91e50a2c-fadf-40e1-8e67-487386b7094a"

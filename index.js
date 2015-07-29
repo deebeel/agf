@@ -2,12 +2,8 @@
 const slice = [].slice;
 
 function run(generatorTemplate, done) {
-  const generator = generatorTemplate(resultHandler, finalizer);
-  function finalizer(){
-    return done || function(){
-      throw new Error("Finalizer can't be called without done callback");
-    };
-  }
+  const generator = generatorTemplate(resultHandler);
+  let isDone = false;
   function resultHandler(isRaw) {
     const bound = isRaw ? 0 : 1;
     return (err) => {
@@ -16,8 +12,18 @@ function run(generatorTemplate, done) {
         return setImmediate(toCall);
       }
       const operationResult = slice.call(arguments, bound);
-      const toReturn = operationResult.length > 1 ? operationResult : operationResult[0];
-      setImmediate(generator.next.bind(generator, toReturn));
+      const toYield = operationResult.length > 1 ? operationResult : operationResult[0];
+      setImmediate(() => {
+        if (isDone) {
+          operationResult.unshift(null);
+          return done.apply(null, operationResult);
+        }
+        const iterationResut = generator.next(toYield);
+        isDone = iterationResut.done;
+        if (isDone && done && typeof iterationResut.value !== "undefined") {
+          done(null, iterationResut.value);
+        }
+      });
     };
   }
   generator.next();

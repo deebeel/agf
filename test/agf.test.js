@@ -1,7 +1,6 @@
 "use strict";
 const agf = require("../index.js");
-
-
+const domain = require("domain");
 describe("#agf", ()=>{
   function asyncFunction(ret, fail){
     return (cb) => {
@@ -18,28 +17,21 @@ describe("#agf", ()=>{
   }
 
   it("should throw an error because of absence of the done callback", (done)=>{
-    agf(function* (resultHandler, finalizer){
-      const res = yield asyncFunction("res", false)(resultHandler());
-      res.should.be.eql("res");
-      try{
-        asyncFunction(new Error("error"), true)(finalizer());
-      }catch (e){
-        e.should.be.an.Error();
-        done();
-      }
+    const d = domain.create();
+    d.on("error", (e) => {
+      e.message.should.be.eql("error");
+      done();
     });
+    d.run(() => {
+      agf(function* (resultHandler){
+        const res = yield asyncFunction("res", false)(resultHandler());
+        res.should.be.eql("res");
+        return asyncFunction(new Error("error"), true)(resultHandler());
+      });
+    });
+
   });
 
-  it("should throw an generator error because of absence of the done callback", (done)=>{
-    agf(function* (resultHandler, finalizer){
-      try{
-       yield asyncFunction(new Error("error"), true)(finalizer());
-      }catch (e){
-        e.should.be.an.Error();
-        done();
-      }
-    });
-  });
 
   it("should return an error", (done)=>{
     agf(function* (resultHandler){
@@ -68,17 +60,30 @@ describe("#agf", ()=>{
     });
   });
 
-  it("should successfully finalize the generator", (done)=>{
-    agf(function* (resultHandler, finalizer){
+  it("should successfully finalize the generator and return result to the callback", (done)=>{
+    agf(function* (resultHandler){
       const res = yield asyncFunction("resstart", false)(resultHandler());
       res.should.be.String();
       res.should.be.eql("resstart");
-      return asyncFunction("res", false)(finalizer());
+      return asyncFunction("res", false)(resultHandler());
     }, (err, res) => {
       (!err).should.be.true();
-      res.should.be.String();
       res.should.be.eql("res");
       done();
     });
   });
+
+
+  it("should successfully finalize the generator and return value passed to the return satement", (done)=>{
+    agf(function* (resultHandler){
+      const res = yield asyncFunction("resstart", false)(resultHandler());
+      res.should.be.String();
+      res.should.be.eql("resstart");
+      return 10;
+    }, (err, res) => {
+      (!err).should.be.true();
+      res.should.be.eql(10);
+      done();
+    });
+  })
 });

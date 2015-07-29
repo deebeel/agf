@@ -1,0 +1,9 @@
+test/
+.npmignore
+.gitignore
+node_modules/
+.tern-project
+.tern-port
+.travis.yml
+.git/
+README.md
