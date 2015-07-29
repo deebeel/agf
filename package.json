@@ -1,6 +1,6 @@
 {
   "name": "agf",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "async flow with generators",
   "main": "index.js",
   "scripts": {
@@ -12,12 +12,12 @@
     "flow",
     "generators"
   ],
-  "devDependencies":{
-    "mocha":"*",
-    "should":"*"
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
   },
-  "engines":{
-    "node":">=0.12.x"
+  "engines": {
+    "node": ">=0.12.x"
   },
   "author": "deebeel",
   "license": "ISC"
