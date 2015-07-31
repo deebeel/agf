@@ -6,4 +6,3 @@ node_modules/
 .tern-port
 .travis.yml
 .git/
-README.md
