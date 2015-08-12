@@ -1,6 +1,6 @@
 {
   "name": "agf",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "async flow with generators",
   "main": "index.js",
   "scripts": {
