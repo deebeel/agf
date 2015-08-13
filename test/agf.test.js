@@ -1,6 +1,5 @@
 "use strict";
 const agf = require("../index.js");
-const domain = require("domain");
 describe("#agf", ()=> {
     function asyncFunction(ret, fail) {
         return (cb) => {
@@ -15,21 +14,48 @@ describe("#agf", ()=> {
             cb(null, ret);
         };
     }
-
-    it("should throw an error because of absence of the done callback", (done)=> {
-        const d = domain.create();
-        d.on("error", (e) => {
+    it("should catch an error after a first next call with promise", (done)=> {
+        agf(function* (resultHandler) {
+            return yield asyncFunction(new Error("error"), true)(resultHandler());
+        }).catch((e) => {
             e.message.should.be.eql("error");
             done();
         });
-        d.run(() => {
-            agf(function* (resultHandler) {
-                const res = yield asyncFunction("res", false)(resultHandler());
-                res.should.be.eql("res");
-                yield asyncFunction(new Error("error"), true)(resultHandler());
-            });
+    });
+    it("should catch an error after a first next call with callback", (done)=> {
+        agf(function* (resultHandler) {
+            return yield asyncFunction(new Error("error"), true)(resultHandler());
+        },(e) => {
+            e.message.should.be.eql("error");
+            done();
         });
+    })
+    it("should catch an error because of absence of the done callback", (done)=> {
+         agf(function* (resultHandler) {
+            const res = yield asyncFunction("res", false)(resultHandler());
+            res.should.be.eql("res");
+            return yield asyncFunction(new Error("error"), true)(resultHandler());
+        }).catch((e) => {
+            e.message.should.be.eql("error");
+            done();
+        });
+    });
 
+
+    it("should throw an error because of absence of the done callback", (done)=> {
+        agf(function* (resultHandler) {
+            const res = yield asyncFunction("res", false)(resultHandler());
+            res.should.be.eql("res");
+            try{
+                return yield asyncFunction(new Error("error"), true)(resultHandler(false, true));
+            }catch(e){
+                e.message.should.be.eql("error");
+                done();
+
+            }
+        }).catch(() => {
+            throw new Error("unreachable place");
+        });
     });
 
 
@@ -112,11 +138,21 @@ describe("#agf", ()=> {
             const p2 = Promise.resolve(3);
             const p3 = yield Promise.resolve(20);
             const c = yield asyncFunction(40, false)(resultHandler());
-            const pp = yield Promise.all([p1,p2]);
-            return pp.concat([p3,c]);
+            const pp = yield Promise.all([p1, p2]);
+            return pp.concat([p3, c]);
         }, (err, res) => {
             (!err).should.be.true();
-            res.should.be.eql([2,3,20,40]);
+            res.should.be.eql([2, 3, 20, 40]);
+            done();
+        });
+    });
+
+    it("should return a promise and reject it", (done)=> {
+        agf(function* () {
+            return yield Promise.reject(new Error("error"));
+        }).catch((err) => {
+            err.should.be.an.Error();
+            err.message.should.be.eql("error");
             done();
         });
     });
