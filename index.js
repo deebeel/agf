@@ -4,7 +4,25 @@ function buildResult(operationResult) {
     return operationResult.length > 1 ? operationResult : operationResult[0];
 }
 
+function Executor() {
+}
+Executor.prototype.setUp = function setUp(resolve, reject) {
+    this.resolve = resolve;
+    this.reject = reject;
+};
+Executor.prototype.resolve = function resolve(data) {
+    this.resolve(data);
+};
+Executor.prototype.reject = function resolve(error) {
+    this.reject(error);
+};
+
+
 function iterationResultHandler(resultHandler, done) {
+    if (!done) {
+        var executor = new Executor();
+        var promise = new Promise(executor.setUp.bind(executor));
+    }
     return function (iterationResult) {
         const value = iterationResult.value;
         if (value instanceof Promise) {
@@ -27,7 +45,12 @@ function run(generatorTemplate, done) {
         const bound = isRaw ? 0 : 1;
         return function (err) {
             if (err && !isRaw) {
-                return setImmediate(()=>(done && done(err)) || generator.throw(err));
+                 return setImmediate(()=> {
+                    if (done) {
+                        return done(err);
+                    }
+                    generator.throw(err);
+                });
             }
             const operationResult = Array.prototype.slice.call(arguments, bound);
             const toYield = err && isRaw ? operationResult : buildResult(operationResult);
